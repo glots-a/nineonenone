@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "145038045635",
+    "project_id": "nscan-65809",
+    "storage_bucket": "nscan-65809.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:145038045635:android:d073210ba9357bcd570d76",
+        "android_client_info": {
+          "package_name": "com.nscan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwWlfcXEGuUTAZtEE1lGtAKHu3NStKr9g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:145038045635:android:0c695f14783fcb45570d76",
+        "android_client_info": {
+          "package_name": "my.company.netscan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwWlfcXEGuUTAZtEE1lGtAKHu3NStKr9g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
