@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   StyleSheet,
@@ -68,12 +68,9 @@ export const WifiScaner = () => {
     }
   };
 
-  const keyExtractor = useCallback(
-    (item: WifiNetwork, index: number) => {
-      return item.BSSID || index.toString();
-    },
-    [networkData],
-  );
+  const keyExtractor = (item: WifiNetwork, index: number) => {
+    return item.BSSID || index.toString();
+  };
 
   const handleConnectToNetwork = (SSID: string | undefined) => {
     //string | undefined
@@ -87,21 +84,18 @@ export const WifiScaner = () => {
     }
   };
 
-  const renderItem = useCallback(
-    ({item}: {item: WifiNetwork}) => {
-      return (
-        <TouchableOpacity
-          style={[S.renderItem, item.SSID === selectedSSID && S.selected]}
-          onPress={() => {
-            handleConnectToNetwork(item?.SSID);
-          }}>
-          <Text style={S.item_text}>SSID: {item?.SSID}</Text>
-          <Text style={S.item_text}>Потужність: {item?.level}</Text>
-        </TouchableOpacity>
-      );
-    },
-    [networkData, selectedSSID],
-  );
+  const renderItem = ({item}: {item: WifiNetwork}) => {
+    return (
+      <TouchableOpacity
+        style={[S.renderItem, item.SSID === selectedSSID && S.selected]}
+        onPress={() => {
+          handleConnectToNetwork(item?.SSID);
+        }}>
+        <Text style={S.item_text}>SSID: {item?.SSID}</Text>
+        <Text style={S.item_text}>Потужність: {item?.level}</Text>
+      </TouchableOpacity>
+    );
+  };
 
   useEffect(() => {
     const checkPermission = async () => {

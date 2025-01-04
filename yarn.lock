@@ -4375,18 +4375,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"barkoder-react-native@npm:^1.5.6":
-  version: 1.5.6
-  resolution: "barkoder-react-native@npm:1.5.6"
-  dependencies:
-    user: ^0.0.0
-  peerDependencies:
-    react: ">= 18.1.0"
-    react-native: ">= 0.70.0"
-  checksum: e98f8f599563dcce6ce96918c4a19d7689bd743456c9458d1dec80a6fb4c59956325477bb3aea094196c457b56f807cdb4294a107b6319ab78360adce206fb42
-  languageName: node
-  linkType: hard
-
 "base64-js@npm:^1.3.1, base64-js@npm:^1.5.1":
   version: 1.5.1
   resolution: "base64-js@npm:1.5.1"
@@ -8780,7 +8768,6 @@ __metadata:
     "@types/react": ^18.2.6
     "@types/react-test-renderer": ^18.0.0
     babel-jest: ^29.6.3
-    barkoder-react-native: ^1.5.6
     eslint: ^8.19.0
     jest: ^29.6.3
     npm: ^11.0.0
@@ -11575,13 +11562,6 @@ __metadata:
   peerDependencies:
     react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
   checksum: dc3843a1b59ac8bd01417bd79498d4c688d5df8bf4801be50008ef4bfaacb349058c0b1605b5b43c828e0a2d62722d7e861573b3f31cea77a7f23e8b0fc2f7e3
-  languageName: node
-  linkType: hard
-
-"user@npm:^0.0.0":
-  version: 0.0.0
-  resolution: "user@npm:0.0.0"
-  checksum: 28efcfc63ca4596512eee3a9d0b6f08faffcd573aa48ffd4e892b0792f3bc781b40c60b38bb29d64710ef8b6fa258eec9363178665c7e7ed4e6595b7072899e5
   languageName: node
   linkType: hard
 

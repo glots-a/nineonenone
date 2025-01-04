@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef, useCallback} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   Text,
   View,
@@ -9,10 +9,11 @@ import {
   StyleSheet,
   ActivityIndicator,
   Dimensions,
+  Alert,
 } from 'react-native';
 import BleManager from 'react-native-ble-manager';
 import {BluetoothSvg} from '../assets';
-import {permission} from '../helpers/permission';
+import {handleBluetoothPermissions} from '../helpers/handleBluetothPermissions';
 
 const BleManagerModule = NativeModules.BleManager;
 const BleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -25,66 +26,20 @@ export const BluetoothScanner = () => {
 
   const [discoveredDevices, setDiscoveredDevices] = useState([]);
 
-  const renderItem = useCallback(
-    ({item}) => {
-      return (
-        <View style={styles.renderItem}>
-          <Text style={styles.item_text}>
-            {item?.name || item?.id || 'Назва не доступна'}
-          </Text>
-          <Text style={styles.item_text}>RSSI: {item?.rssi}</Text>
-        </View>
-      );
-    },
-    [discoveredDevices],
-  );
-
-  const keyExtractor = useCallback(
-    (item, index) => {
-      return item?.id || index.toString();
-    },
-    [discoveredDevices],
-  );
-
-  useEffect(() => {
-    permission();
-
-    BleManager.enableBluetooth().then(() => {
-      console.log('Bluetooth is turned on!');
-    });
-
-    BleManager.start({showAlert: false}).then(() => {
-      console.log('BleManager initialized');
-    });
-
-    let stopDiscoverListener = BleManagerEmitter.addListener(
-      'BleManagerDiscoverPeripheral',
-      peripheral => {
-        peripherals.current.set(peripheral.id, peripheral);
-        setDiscoveredDevices(Array.from(peripherals.current.values()));
-      },
+  const renderItem = ({item}) => {
+    return (
+      <View style={styles.renderItem}>
+        <Text style={styles.item_text}>
+          {item?.name || item?.id || 'Назва не доступна'}
+        </Text>
+        <Text style={styles.item_text}>RSSI: {item?.rssi}</Text>
+      </View>
     );
+  };
 
-    let stopConnectListener = BleManagerEmitter.addListener(
-      'BleManagerConnectPeripheral',
-      peripheral => {
-        console.log('BleManagerConnectPeripheral:', peripheral);
-      },
-    );
-
-    let stopScanListener = BleManagerEmitter.addListener(
-      'BleManagerStopScan',
-      () => {
-        setIsScanning(false);
-      },
-    );
-
-    return () => {
-      stopDiscoverListener.remove();
-      stopConnectListener.remove();
-      stopScanListener.remove();
-    };
-  }, []);
+  const keyExtractor = (item, index) => {
+    return item?.id || index.toString();
+  };
 
   const scan = () => {
     if (!isScanning) {
@@ -97,6 +52,73 @@ export const BluetoothScanner = () => {
         });
     }
   };
+
+  useEffect(() => {
+    const initializeBluetooth = async () => {
+      const permissionsGranted = await handleBluetoothPermissions();
+
+      if (!permissionsGranted) {
+        Alert.alert(
+          'Потрібні дозволи',
+          'Для сканування та підключення до пристроїв потрібні дозволи Bluetooth',
+        );
+        return;
+      }
+
+      try {
+        BleManager.checkState()
+          .then(res => console.log('checked', res))
+          .catch(e => {
+            throw new Error(`BleManager state check failed: ${e.message}`);
+          });
+
+        await BleManager.start({showAlert: false});
+        console.log('BleManager initialized');
+
+        await BleManager.enableBluetooth();
+        console.log('Bluetooth is turned on!');
+      } catch (error) {
+        console.error('Error initializing Bluetooth:', error);
+        Alert.alert('Помилка', 'Не вдалося ініціалізувати Bluetooth');
+        return;
+      }
+
+      try {
+        const stopDiscoverListener = BleManagerEmitter.addListener(
+          'BleManagerDiscoverPeripheral',
+          peripheral => {
+            peripherals.current.set(peripheral.id, peripheral);
+            setDiscoveredDevices(Array.from(peripherals.current.values()));
+          },
+        );
+
+        const stopConnectListener = BleManagerEmitter.addListener(
+          'BleManagerConnectPeripheral',
+          peripheral => {
+            console.log('BleManagerConnectPeripheral:', peripheral);
+          },
+        );
+
+        const stopScanListener = BleManagerEmitter.addListener(
+          'BleManagerStopScan',
+          () => {
+            setIsScanning(false);
+          },
+        );
+
+        return () => {
+          stopDiscoverListener.remove();
+          stopConnectListener.remove();
+          stopScanListener.remove();
+        };
+      } catch (error) {
+        console.error('Error setting up Bluetooth event listeners:', error);
+        Alert.alert('Помилка', 'Помилка пр роботі із мережею');
+      }
+    };
+
+    initializeBluetooth();
+  }, []);
 
   return (
     <View style={styles.container}>

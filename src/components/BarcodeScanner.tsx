@@ -32,7 +32,10 @@ export const BarcodeScanner = () => {
     codeTypes: ['qr', 'ean-13'],
     onCodeScanned: codes => {
       const code = {value: codes[0].value, type: codes[0].type};
-      dispatch(addNewCode(code));
+      console.log('code', code);
+      if (code.type !== 'upc-a') {
+        dispatch(addNewCode(code));
+      }
     },
   });
 
