@@ -6,3 +6,5 @@ export {WifiScaner} from './WifiScaner';
 export {BluetoothScanner} from './BluetoothScanner';
 export {CameraNotAvalible} from './CameraNotAvalible';
 export {ModalInfo} from './ModalInfo';
+export {RemoveButton} from './RemoveButton.tsx';
+export {MapButton} from './MapButton';

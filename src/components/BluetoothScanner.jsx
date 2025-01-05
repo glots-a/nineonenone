@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import {
   Text,
   View,
@@ -10,10 +10,18 @@ import {
   ActivityIndicator,
   Dimensions,
   Alert,
+  PermissionsAndroid,
 } from 'react-native';
 import BleManager from 'react-native-ble-manager';
 import {BluetoothSvg} from '../assets';
 import {handleBluetoothPermissions} from '../helpers/handleBluetothPermissions';
+import {MapButton} from './MapButton';
+import useGetUserLocation from '../hooks/useGetUserLocation';
+import {permission} from '../helpers/permission';
+import {ModalInfo} from './ModalInfo';
+import {useNavigation} from '@react-navigation/native';
+import {useAppDispatch, useAppSelector} from '../redux/hooks/redux-hooks';
+import {addBlNetwork} from '../redux/dataSlice';
 
 const BleManagerModule = NativeModules.BleManager;
 const BleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -21,10 +29,18 @@ const BleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 const WIDTH = Dimensions.get('screen').width;
 
 export const BluetoothScanner = () => {
+  const bluetothData = useAppSelector(state => state.storeddata.bl);
+  const dispatch = useAppDispatch();
   const peripherals = useRef(new Map());
+  const userLocationRef = useRef({latitude: 0, longitude: 0});
   const [isScanning, setIsScanning] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [permissionGranted, setPermissionGranted] = useState(false);
 
-  const [discoveredDevices, setDiscoveredDevices] = useState([]);
+  console.log('arr', Array.isArray(bluetothData));
+
+  const {userLocation, loading} = useGetUserLocation(permissionGranted);
+  const navigation = useNavigation();
 
   const renderItem = ({item}) => {
     return (
@@ -41,7 +57,18 @@ export const BluetoothScanner = () => {
     return item?.id || index.toString();
   };
 
-  const scan = () => {
+  const handleDecline = useCallback(() => {
+    setModalVisible(false);
+    navigation.goBack();
+  }, []);
+
+  const scan = userCoordinates => {
+    if (userCoordinates.latitude === 0 || userCoordinates.longitude === 0) {
+      console.log('User location is not available yet');
+      setModalVisible(true);
+      return;
+    }
+
     if (!isScanning) {
       BleManager.scan([], 5, true)
         .then(() => {
@@ -87,8 +114,28 @@ export const BluetoothScanner = () => {
         const stopDiscoverListener = BleManagerEmitter.addListener(
           'BleManagerDiscoverPeripheral',
           peripheral => {
-            peripherals.current.set(peripheral.id, peripheral);
-            setDiscoveredDevices(Array.from(peripherals.current.values()));
+            const latestUserLocation = userLocationRef.current;
+
+            if (
+              latestUserLocation.latitude === 0 ||
+              latestUserLocation.longitude === 0
+            ) {
+              return;
+            }
+
+            const peripheralWithLocation = {
+              ...peripheral,
+              location: latestUserLocation,
+            };
+
+            peripherals.current.set(peripheral.id, peripheralWithLocation);
+            const peripheralsArray = Array.from(peripherals.current.values());
+
+            dispatch(
+              addBlNetwork({
+                peripherals: peripheralsArray,
+              }),
+            );
           },
         );
 
@@ -120,9 +167,26 @@ export const BluetoothScanner = () => {
     initializeBluetooth();
   }, []);
 
+  useEffect(() => {
+    const checkPermission = async () => {
+      const granted = await permission();
+      setPermissionGranted(granted === PermissionsAndroid.RESULTS.GRANTED);
+    };
+    checkPermission();
+  }, []);
+
+  useEffect(() => {
+    if (userLocation.latitude !== 0 && userLocation.longitude !== 0) {
+      userLocationRef.current = userLocation;
+    }
+  }, [userLocation]);
+
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.startScan} onPress={scan}>
+      <TouchableOpacity
+        style={styles.startScan}
+        onPress={() => scan(userLocation)}
+        disabled={loading}>
         {isScanning ? (
           <ActivityIndicator color={'#D128A1'} />
         ) : (
@@ -134,9 +198,9 @@ export const BluetoothScanner = () => {
       </TouchableOpacity>
 
       <Text style={styles.title}>Знайдені пристрої:</Text>
-      {discoveredDevices.length > 0 ? (
+      {bluetothData.length > 0 ? (
         <FlatList
-          data={discoveredDevices}
+          data={bluetothData}
           contentContainerStyle={styles.flatlist}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
@@ -148,6 +212,15 @@ export const BluetoothScanner = () => {
           Пристроїв Bluetooth не знайдено
         </Text>
       )}
+
+      {bluetothData.length > 0 && <MapButton loc="wifi" />}
+
+      <ModalInfo
+        visible={modalVisible}
+        onClose={handleDecline}
+        title={'Щоб продовжити, пристрій має використовувати точну геолокацію.'}
+        message={'Потрібно увімкнути місцеположення пристрою'}
+      />
     </View>
   );
 };

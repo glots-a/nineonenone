@@ -10,7 +10,7 @@ import {
   Alert,
   PermissionsAndroid,
 } from 'react-native';
-import {MapSvg, WifiSvg} from '../assets';
+import {WifiSvg} from '../assets';
 import {useAppDispatch, useAppSelector} from '../redux/hooks/redux-hooks';
 import WifiManager from 'react-native-wifi-reborn';
 import {addNewNetwork} from '../redux/dataSlice';
@@ -23,6 +23,7 @@ import {RootStackParamList} from '../types/RootStackParamList';
 import useGetUserLocation from '../hooks/useGetUserLocation';
 import {saveWifiNetwork} from '../helpers/saveWiFiNetwork';
 import {ModalInfo} from './ModalInfo';
+import {MapButton} from './MapButton';
 
 const WIDTH = Dimensions.get('screen').width;
 
@@ -122,9 +123,13 @@ export const WifiScaner = () => {
 
   useEffect(() => {
     const checkWifi = async () => {
-      const enabled = await WifiManager.isEnabled();
-      if (!enabled) {
-        WifiManager.setEnabled(true);
+      try {
+        const enabled = await WifiManager.isEnabled();
+        if (!enabled) {
+          WifiManager.setEnabled(true);
+        }
+      } catch (error) {
+        console.log('setEnabled', error);
       }
     };
 
@@ -160,15 +165,10 @@ export const WifiScaner = () => {
           showsVerticalScrollIndicator={false}
         />
       ) : (
-        <Text style={S.noDevicesText}>Мережу wifi не знайдено</Text>
+        <Text style={S.noDevicesText}>Список Wifi мереж пустий</Text>
       )}
 
-      <TouchableOpacity
-        style={S.navigateMap}
-        onPress={() => navigation.navigate('Map')}>
-        <MapSvg />
-        <Text style={[S.item_text, S.text_color]}>Карта </Text>
-      </TouchableOpacity>
+      {networkData.length > 0 && <MapButton loc="wifi" />}
 
       <ModalInfo
         visible={modalVisible}

@@ -2,15 +2,18 @@ import {createSlice, nanoid} from '@reduxjs/toolkit';
 import {Code} from '../types/Code';
 import {WifiNetwork} from '../types/WIFI';
 import {getMostFrequent} from '../helpers/getTheMostFrequentValue';
+import {Peripheral} from '../types/BlTypes';
 
 type State = {
   codes: Code[] | null;
   wifi: WifiNetwork[];
+  bl: Peripheral[];
 };
 
 const initialState: State = {
   codes: null,
   wifi: [],
+  bl: [],
 };
 
 const dataSlice = createSlice({
@@ -58,8 +61,31 @@ const dataSlice = createSlice({
         }
       });
     },
+
+    addBlNetwork: (store, action) => {
+      const peripherals = action.payload.peripherals;
+
+      const uniquePeripherals = peripherals.filter(
+        (newPeripheral: any) =>
+          !store.bl.some(
+            existingPeripheral => existingPeripheral.id === newPeripheral.id,
+          ),
+      );
+      store.bl = [...store.bl, ...uniquePeripherals];
+    },
+
+    clearList: (store, action) => {
+      const clearActions: Record<string, () => void> = {
+        qr: () => (store.codes = null),
+        wifi: () => (store.wifi = []),
+        bl: () => (store.bl = []),
+      };
+
+      clearActions[action.payload]();
+    },
   },
 });
 
 export default dataSlice.reducer;
-export const {addNewCode, addNewNetwork} = dataSlice.actions;
+export const {addNewCode, addNewNetwork, clearList, addBlNetwork} =
+  dataSlice.actions;
