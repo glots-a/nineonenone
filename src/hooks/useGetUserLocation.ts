@@ -23,10 +23,10 @@ const useGetUserLocation = (permissionGranted: boolean) => {
           longitude: location.longitude,
         });
       } catch (error) {
-        console.error(error);
+        console.error('useGetUserLocation', error);
         setUserLocation({
-          latitude: 50.44151138023848,
-          longitude: 30.4996872396613,
+          latitude: 0,
+          longitude: 0,
         });
       } finally {
         setLoading(false);

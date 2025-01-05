@@ -1,6 +1,7 @@
 import {createSlice, nanoid} from '@reduxjs/toolkit';
 import {Code} from '../types/Code';
 import {WifiNetwork} from '../types/WIFI';
+import {getMostFrequent} from '../helpers/getTheMostFrequentValue';
 
 type State = {
   codes: Code[] | null;
@@ -17,20 +18,25 @@ const dataSlice = createSlice({
   initialState,
   reducers: {
     addNewCode: (store, action) => {
-      if (Array.isArray(store.codes)) {
-        const {type, value} = action.payload;
+      const mostFrequent = getMostFrequent(action.payload);
 
-        const isDuplicate = store.codes.some(item => item.value === value);
+      if (mostFrequent) {
+        if (Array.isArray(store.codes)) {
+          const {type, value} = mostFrequent;
 
-        if (!isDuplicate) {
+          const isDuplicate = store.codes.some(item => item.value === value);
+
+          if (!isDuplicate) {
+            const id = nanoid();
+            store.codes = [{id, type, value}, ...store.codes];
+          }
+        } else {
           const id = nanoid();
-          store.codes = [{id, type, value}, ...store.codes];
+          store.codes = [{...mostFrequent, id}];
         }
-      } else {
-        const id = nanoid();
-        store.codes = [{...action.payload, id}];
       }
     },
+
     addNewNetwork: (store, action) => {
       const {networks, location} = action.payload;
       networks.forEach((network: WifiNetwork) => {

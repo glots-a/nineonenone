@@ -6,12 +6,15 @@ import {useAppSelector} from '../redux/hooks/redux-hooks';
 export const MapScreen = () => {
   const networkData = useAppSelector(state => state.storeddata.wifi);
 
-  const initial = networkData[0].location;
+  const initial =
+    networkData.length > 0
+      ? networkData[0].location
+      : {latitude: 50.4501, longitude: 30.5234};
 
   return (
     <View style={styles.container}>
       <MapView
-        provider={PROVIDER_GOOGLE} // remove if not using Google Maps
+        provider={PROVIDER_GOOGLE}
         style={styles.map}
         zoomEnabled
         showsUserLocation={true}

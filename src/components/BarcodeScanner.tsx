@@ -13,11 +13,12 @@ import {
   useCameraPermission,
   useCodeScanner,
 } from 'react-native-vision-camera';
-import {FullScreenLoader} from '.';
+import {CameraNotAvalible, FullScreenLoader} from '.';
 import {QrCodeSvg} from '../assets';
 import {useAppDispatch, useAppSelector} from '../redux/hooks/redux-hooks';
 import {addNewCode} from '../redux/dataSlice';
 import {Code} from '../types/Code';
+import {isValidEan13} from '../helpers/isValidEARNcode';
 
 const WIDTH = Dimensions.get('screen').width;
 
@@ -32,8 +33,11 @@ export const BarcodeScanner = () => {
     codeTypes: ['qr', 'ean-13'],
     onCodeScanned: codes => {
       const code = {value: codes[0].value, type: codes[0].type};
-      console.log('code', code);
-      if (code.type !== 'upc-a') {
+
+      if (
+        code.type !== 'upc-a' &&
+        (code.type === 'qr' || isValidEan13(code?.value))
+      ) {
         dispatch(addNewCode(code));
       }
     },
@@ -64,18 +68,24 @@ export const BarcodeScanner = () => {
   }
 
   if (!device) {
-    return;
+    return <CameraNotAvalible />;
   }
 
   return (
     <View style={S.container}>
       <View style={S.cameraContainer}>
-        <Camera
-          style={S.cameraContainer}
-          device={device}
-          isActive={showScanner}
-          codeScanner={codeScanner}
-        />
+        {showScanner ? (
+          <Camera
+            style={S.cameraContainer}
+            device={device}
+            isActive={showScanner}
+            codeScanner={codeScanner}
+          />
+        ) : (
+          <Text style={S.startScanText}>
+            Нажміть "Сканувати" {'\n'} та наведіть камеру на код
+          </Text>
+        )}
       </View>
 
       <TouchableOpacity
@@ -108,6 +118,9 @@ const S = StyleSheet.create({
     width: 320,
     alignSelf: 'center',
     height: 180,
+    overflow: 'hidden',
+    borderRadius: 8,
+    justifyContent: 'center',
   },
   startScan: {
     alignItems: 'center',
@@ -140,4 +153,9 @@ const S = StyleSheet.create({
     rowGap: 8,
   },
   item_text: {fontSize: 16, fontWeight: '600'},
+  startScanText: {
+    fontStyle: 'italic',
+    fontSize: 16,
+    textAlign: 'center',
+  },
 });

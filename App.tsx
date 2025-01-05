@@ -6,13 +6,16 @@ import '@react-native-firebase/firestore';
 import {persitor, store} from './src/redux/store';
 import {RootStack} from './src/navigators';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 
 const App = () => {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persitor}>
         <GestureHandlerRootView style={{flex: 1}}>
-          <RootStack />
+          <SafeAreaProvider>
+            <RootStack />
+          </SafeAreaProvider>
         </GestureHandlerRootView>
       </PersistGate>
     </Provider>

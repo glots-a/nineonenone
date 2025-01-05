@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   View,
   StyleSheet,
@@ -22,6 +22,7 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../types/RootStackParamList';
 import useGetUserLocation from '../hooks/useGetUserLocation';
 import {saveWifiNetwork} from '../helpers/saveWiFiNetwork';
+import {ModalInfo} from './ModalInfo';
 
 const WIDTH = Dimensions.get('screen').width;
 
@@ -30,6 +31,7 @@ export const WifiScaner = () => {
   const dispatch = useAppDispatch();
   const networkData = useAppSelector(state => state.storeddata.wifi);
   const [selectedSSID, setSelectedSSID] = useState<string | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const [permissionGranted, setPermissionGranted] = useState(false);
 
@@ -40,12 +42,20 @@ export const WifiScaner = () => {
 
   const getWifiList = async (userCoordinates: Location) => {
     if (userCoordinates.latitude === 0 || userCoordinates.longitude === 0) {
-      console.warn('User location is not available yet');
+      console.log('User location is not available yet');
+      setModalVisible(true);
       return;
     }
 
     setScanning(true);
     try {
+      const enabled = await WifiManager.isEnabled();
+
+      if (!enabled) {
+        setModalVisible(true);
+        return;
+      }
+
       const res = await WifiManager.loadWifiList();
       await delay(2000);
       res.forEach(async network => {
@@ -97,12 +107,28 @@ export const WifiScaner = () => {
     );
   };
 
+  const handleDecline = useCallback(() => {
+    setModalVisible(false);
+    navigation.goBack();
+  }, []);
+
   useEffect(() => {
     const checkPermission = async () => {
       const granted = await permission();
       setPermissionGranted(granted === PermissionsAndroid.RESULTS.GRANTED);
     };
     checkPermission();
+  }, []);
+
+  useEffect(() => {
+    const checkWifi = async () => {
+      const enabled = await WifiManager.isEnabled();
+      if (!enabled) {
+        WifiManager.setEnabled(true);
+      }
+    };
+
+    checkWifi();
   }, []);
 
   return (
@@ -143,6 +169,17 @@ export const WifiScaner = () => {
         <MapSvg />
         <Text style={[S.item_text, S.text_color]}>Карта </Text>
       </TouchableOpacity>
+
+      <ModalInfo
+        visible={modalVisible}
+        onClose={handleDecline}
+        title={
+          'Щоб продовжити, пристрій має використовувати точну геолокацію та WiFi.'
+        }
+        message={
+          'Потрібно увімкнути місцеположення пристрою та переконатичь що WiFi увімкненний.'
+        }
+      />
     </View>
   );
 };
